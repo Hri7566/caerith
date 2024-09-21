@@ -1,0 +1,5 @@
+*.mid
+/bin
+/obj
+*.make
+Makefile
