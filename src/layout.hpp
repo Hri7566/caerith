@@ -2,22 +2,36 @@
 #define _ca_layout_h
 
 #include <vector>
-
-#define KEY_WIDTH 17.07
+#include <raylib.h>
 
 typedef struct
 {
-    double left;
-    double right;
-} Key;
+    float position_x;
+    float position_y;
+} PianoKey;
 
-class Layout
+class PianoLayout
 {
 public:
-    Layout(int first_key, int last_key);
+    PianoLayout(int first_key, int last_key);
 
-    std::vector<Key> keys;
+    std::vector<PianoKey> keys;
     std::vector<bool> black_key;
+    std::vector<bool> pressed_keys;
+    std::vector<Color> key_colors;
+
+    int num_keys;
+    float keyboard_height;
+    float key_width;
+
+    Texture white_key_tex;
+    Texture black_key_tex;
+
+    Texture white_key_pressed_tex;
+    Texture black_key_pressed_tex;
+
+    void update(float delta);
+    void draw();
 };
 
 #endif
