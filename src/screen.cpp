@@ -24,11 +24,11 @@ void start_screen(MIDI *smf)
     int first_key = 0;
     int last_key = 127;
 
+    float scale = 0.5;
+
     while (!WindowShouldClose())
     {
         delta = GetFrameTime();
-
-        uint32_t scale = 1;
         uint32_t note_thickness = (WINDOW_WIDTH / 88);
 
         uint32_t offset_y = 0;
@@ -54,6 +54,15 @@ void start_screen(MIDI *smf)
             {
                 midi_time += speed * delta;
             }
+        }
+
+        if (IsKeyDown(KEY_LEFT))
+        {
+            scale -= 0.01;
+        }
+        else if (IsKeyDown(KEY_RIGHT))
+        {
+            scale += 0.01;
         }
 
         BeginDrawing();
@@ -159,39 +168,35 @@ void start_screen(MIDI *smf)
 
                 if (note.start_time < midi_time)
                 {
-                    key_pressed[note.key] = true;
+                    // key_pressed[note.key] = true;
 
                     // TODO blend colors
 
                     key_notes[note.key]++;
                 }
-
-                // TODO layout black keys + colors
-
-                // TODO note colors
                 // DrawRectangle(left, cap_top, right - left, cap_bottom - cap_top, RAYWHITE);
                 // DrawRectangle(left, top, right - left, bottom - top, RAYWHITE);
                 // DrawRectangle(left, cap_top, right - left, cap_bottom - top, RAYWHITE);
 
-                double y = ((note.start_time - midi_time) / scale);
-                double height = (note.duration / scale);
+                double y = note.start_time - midi_time;
+                double height = note.duration;
 
                 if (!layout.black_key[note.key])
                 {
                     DrawRectangle(
                         key->left,
-                        -y - height,
+                        (-y - height) / scale,
                         key->right - key->left,
-                        height,
+                        height / scale,
                         color);
                 }
                 else
                 {
                     DrawRectangle(
                         key->left - (KEY_WIDTH / 4),
-                        -y - height,
+                        (-y - height) / scale,
                         key->right - key->left - (KEY_WIDTH / 2),
-                        height,
+                        height / scale,
                         color);
                 }
             }
@@ -204,15 +209,6 @@ void start_screen(MIDI *smf)
             if (layout.black_key[i])
                 continue;
 
-            // TODO colors
-
-            if (key_pressed[i]) // TODO
-            {
-            }
-            else
-            {
-            }
-
             DrawRectangle(layout.keys[i].left, WINDOW_HEIGHT - keyboard_height, layout.keys[i].right - layout.keys[i].left, keyboard_height, RAYWHITE);
         }
 
@@ -221,22 +217,19 @@ void start_screen(MIDI *smf)
             if (!layout.black_key[i])
                 continue;
 
-            // TODO colors
-
-            if (key_pressed[i]) // TODO
-            {
-            }
-            else
-            {
-            }
-
-            DrawRectangle(layout.keys[i].left - (KEY_WIDTH / 4), WINDOW_HEIGHT - keyboard_height, layout.keys[i].right - layout.keys[i].left - (KEY_WIDTH / 2), (keyboard_height / 3) * 2, BLACK);
+            DrawRectangle(
+                layout.keys[i].left - (KEY_WIDTH / 4),
+                WINDOW_HEIGHT - keyboard_height,
+                layout.keys[i].right - layout.keys[i].left - (KEY_WIDTH / 2),
+                (keyboard_height / 3) * 2, BLACK);
         }
 
-        char midi_time_text[256];
-        sprintf(midi_time_text, "Position: %f", midi_time);
+        char midi_text[256];
+        sprintf(midi_text, "Position: %f", midi_time);
+        DrawText(midi_text, 0, 50, 20, GRAY);
 
-        DrawText(midi_time_text, 0, 50, 20, GRAY);
+        sprintf(midi_text, "Scale: %f", scale);
+        DrawText(midi_text, 0, 80, 20, GRAY);
 
         DrawFPS(0, 0);
 
