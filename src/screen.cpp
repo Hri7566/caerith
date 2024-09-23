@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <rtmidi/RtMidi.h>
 
 Color note_colors[] = {BLUE, GREEN, ORANGE, YELLOW, MAGENTA, RED};
 
@@ -12,12 +13,17 @@ void start_screen(MIDI *smf)
     SetWindowMonitor(0);
     SetTargetFPS(60);
 
-    ToggleBorderlessWindowed();
+    // ToggleBorderlessWindowed();
+
+    RtMidiOut midi_out;
 
     uint32_t scroll_pos = 0;
     float scale = 1.0f;
 
-    PianoLayout layout = PianoLayout(0, 127);
+    uint8_t left_key = smf->min_note;
+    uint8_t right_key = smf->max_note;
+
+    PianoLayout layout = PianoLayout(left_key, right_key);
     float delta = 0;
     bool playing = false;
 
@@ -72,56 +78,56 @@ void start_screen(MIDI *smf)
 
             for (AerithNote note : track.notes)
             {
-                int key_index = note.key - track.min_note;
+                int key_index = note.key - left_key;
                 PianoKey key = layout.keys[key_index];
 
                 float note_position = (-(float)note.start_time - (float)note.duration) * scale;
                 float note_height = float(note.duration) * scale;
                 // std::cout << std::dec << note.start_time << " (" << floor(note_position) << ") " << note.duration << std::endl;
 
-                if (floor(note_position + note_height) + scroll_pos < 0)
-                    continue;
+                int note_bottom_pos = (int)floor(note_position + note_height) + scroll_pos;
+                int note_top_pos = (int)floor(note_position) + scroll_pos;
 
-                if (floor(note_position) + scroll_pos > WINDOW_HEIGHT)
-                    continue;
-
-                if (!layout.black_key[key_index])
+                if (note_bottom_pos > 0 && note_top_pos < WINDOW_HEIGHT - layout.keyboard_height)
                 {
-                    Rectangle dest = {
-                        key.position_x,
-                        floor(note_position) + scroll_pos,
-                        layout.key_width,
-                        floor(note_height)};
+                    if (!layout.black_key[key_index])
+                    {
+                        Rectangle dest = {
+                            key.position_x,
+                            floor(note_position) + scroll_pos,
+                            layout.key_width,
+                            floor(note_height)};
 
-                    Rectangle inner = {
-                        dest.x,
-                        dest.y + 4,
-                        dest.width,
-                        dest.height - 8};
+                        Rectangle inner = {
+                            dest.x,
+                            dest.y + 4,
+                            dest.width,
+                            dest.height - 8};
 
-                    Rectangle top_cap = {
-                        dest.x,
-                        dest.y,
-                        dest.width,
-                        4};
+                        Rectangle top_cap = {
+                            dest.x,
+                            dest.y,
+                            dest.width,
+                            4};
 
-                    Rectangle bottom_cap = {
-                        dest.x,
-                        dest.y + dest.height - 4,
-                        dest.width,
-                        4};
+                        Rectangle bottom_cap = {
+                            dest.x,
+                            dest.y + dest.height - 4,
+                            dest.width,
+                            4};
 
-                    DrawTexturePro(note_tex, note_source, inner, {0, 0}, 0, track_color);
-                    DrawTexturePro(note_top_tex, note_top_source, top_cap, {0, 0}, 0, track_color);
-                    DrawTexturePro(note_bottom_tex, note_bottom_source, bottom_cap, {0, 0}, 0, track_color);
-                }
+                        DrawTexturePro(note_tex, note_source, inner, {0, 0}, 0, track_color);
+                        DrawTexturePro(note_top_tex, note_top_source, top_cap, {0, 0}, 0, track_color);
+                        DrawTexturePro(note_bottom_tex, note_bottom_source, bottom_cap, {0, 0}, 0, track_color);
+                    }
 
-                if (
-                    note_position + scroll_pos <= WINDOW_HEIGHT - layout.keyboard_height &&
-                    note_position + note_height + scroll_pos > WINDOW_HEIGHT - layout.keyboard_height)
-                {
-                    layout.key_colors[key_index] = track_color;
-                    layout.pressed_keys[key_index] = true;
+                    if (
+                        note_position + scroll_pos <= WINDOW_HEIGHT - layout.keyboard_height &&
+                        note_position + note_height + scroll_pos > WINDOW_HEIGHT - layout.keyboard_height)
+                    {
+                        layout.key_colors[key_index] = track_color;
+                        layout.pressed_keys[key_index] = true;
+                    }
                 }
 
                 i++;
@@ -129,7 +135,7 @@ void start_screen(MIDI *smf)
 
             for (AerithNote note : track.notes)
             {
-                int key_index = note.key - track.min_note;
+                int key_index = note.key - left_key;
                 PianoKey key = layout.keys[key_index];
 
                 float note_position = (-(float)note.start_time - (float)note.duration) * scale;

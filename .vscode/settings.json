@@ -68,7 +68,10 @@
         "ios": "cpp",
         "locale": "cpp",
         "queue": "cpp",
-        "stack": "cpp"
+        "stack": "cpp",
+        "*.ipp": "cpp",
+        "deque": "cpp",
+        "__split_buffer": "cpp"
     },
     "makefile.configureOnOpen": true
 }

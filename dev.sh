@@ -2,4 +2,4 @@
 
 premake5 gmake2 && \
 make -j4 && \
-./bin/caerith ./test3.mid
+./bin/caerith ./test6.mid
